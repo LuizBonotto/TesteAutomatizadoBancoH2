@@ -8,7 +8,8 @@ import infra.database.H2Config;
 import infra.gateway.ContaGatewayDB;
 import infra.gateway.ContaGatewayLocal;
 import org.h2.tools.Server;
-import org.junit.*;
+import org.junit.jupiter.api.*;
+
 
 import java.sql.SQLException;
 
@@ -18,7 +19,7 @@ public class ContaUseCaseTest {
     private ContaGateway contaGateway;
 
     // @BeforeClass - antes da classe ser instanciada
-    @BeforeClass
+    @BeforeAll
     public static void beforeClass() throws SQLException {
         ContaGatewayDB contaGateway = new ContaGatewayDB(H2Config.getDataSource());
         contaGateway.createClienteTable();
@@ -29,7 +30,7 @@ public class ContaUseCaseTest {
     }
 
     // @Before - antes de CADA teste
-    @Before
+    @BeforeEach
     public void before() {
         contaGateway = new ContaGatewayDB(H2Config.getDataSource());
         contaUseCase = new ContaUseCase(contaGateway);
@@ -46,12 +47,12 @@ public class ContaUseCaseTest {
     }
 
     // @After
-    @After
+    @AfterEach
     public void after() {
     }
 
     // @AfterClass
-    @AfterClass
+    @AfterAll
     public static void afterClass() {
     }
 
@@ -70,11 +71,11 @@ public class ContaUseCaseTest {
         // Then - Entao
         Double valorEsperadoConta1 = saldoAtualConta1 - 20.0;
         conta1 = contaGateway.findById("1");
-        Assert.assertEquals(valorEsperadoConta1, conta1.getSaldo());
+        Assertions.assertEquals(valorEsperadoConta1, conta1.getSaldo());
 
         Double valorEsperadoConta2 = saldoAtualConta2 + 20.0;
         conta2 = contaGateway.findById("2");
-        Assert.assertEquals(valorEsperadoConta2, conta2.getSaldo());
+        Assertions.assertEquals(valorEsperadoConta2, conta2.getSaldo());
     }
 
     @Test
@@ -89,20 +90,20 @@ public class ContaUseCaseTest {
 
         // Then
         Double valorEsperado = 10.0 + saldoAtual;
-        Assert.assertEquals(valorEsperado, conta.getSaldo());
+        Assertions.assertEquals(valorEsperado, conta.getSaldo());
     }
 
      @Test
     public void deveCriarContaCorretamente(){
         //Given
-        Cliente cliente3 = new Cliente("Igor", "222.222.222.22");
+        Cliente cliente3 = new Cliente("3","Igor", "222.222.222.22");
         Conta conta3 = new Conta("3", cliente3);
 
         //When
         contaUseCase.criarConta(conta3);
 
         //Then
-        Assert.assertNotNull(conta3);
+         Assertions.assertNotNull(conta3);
     }
 
     @Test
@@ -112,8 +113,13 @@ public class ContaUseCaseTest {
         //When
         Conta conta = contaUseCase.buscarConta(idConta);
         //Then
-        Assert.assertNotNull(conta);
-        Assert.assertEquals(idConta,conta.getId());
+//        Assertions.assertNotNull(conta);
+//        Assertions.assertEquals(idConta,conta.getId());
+
+        Assertions.assertAll("Testando buscar conta",
+                () -> Assertions.assertNotNull(conta),
+                () -> Assertions.assertEquals(idConta,conta.getId())
+        );
 
     }
 
@@ -127,10 +133,12 @@ public class ContaUseCaseTest {
         try {
             contaUseCase.emprestimo(conta.getId(), valor);
 
-            Assert.assertEquals(conta.getSaldoDisponivelParaEmprestimo(), (saldoInicialEmprestimo - valor), 0);
-            Assert.assertEquals(conta.getSaldo(), (saldoInicial + valor), 0);
+            conta = contaUseCase.buscarConta("1");
+
+            Assertions.assertEquals(conta.getSaldoDisponivelParaEmprestimo(), (saldoInicialEmprestimo - valor), 0);
+            Assertions.assertEquals(conta.getSaldo(), (saldoInicial + valor), 0);
         } catch (Exception e) {
-            Assert.assertEquals("Conta invalida - [id: " + conta.getId() + "]", e.getMessage());
+            Assertions.assertEquals("Conta invalida - [id: " + conta.getId() + "]", e.getMessage());
         }
     }
 }
